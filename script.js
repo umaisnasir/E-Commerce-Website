@@ -90,7 +90,47 @@ function initNav(){
   window.addEventListener('pageshow',()=>setOpen(false));
   setOpen(false);
 }
-function initFaq(){const answers=[...document.querySelectorAll('.faq-answer')];const closeAnswer=btn=>{const panel=document.getElementById(btn.getAttribute('aria-controls'));btn.setAttribute('aria-expanded','false');if(panel){panel.classList.remove('open');panel.style.maxHeight='0px';}};const openAnswer=btn=>{const panel=document.getElementById(btn.getAttribute('aria-controls'));btn.setAttribute('aria-expanded','true');if(panel){panel.classList.add('open');panel.style.maxHeight=panel.scrollHeight+'px';}};document.querySelectorAll('.faq-question').forEach(btn=>{const panel=document.getElementById(btn.getAttribute('aria-controls'));if(panel)panel.style.maxHeight=btn.getAttribute('aria-expanded')==='true'?panel.scrollHeight+'px':'0px';btn.addEventListener('click',()=>{const isOpen=btn.getAttribute('aria-expanded')==='true';document.querySelectorAll('.faq-question').forEach(closeAnswer);if(!isOpen)openAnswer(btn);});});window.addEventListener('resize',()=>answers.forEach(panel=>{if(panel.classList.contains('open'))panel.style.maxHeight=panel.scrollHeight+'px';}));}
+function initFaq(){
+  const questions=[...document.querySelectorAll('.faq-question')];
+  if(!questions.length)return;
+
+  const setState=(button,isOpen)=>{
+    const panel=document.getElementById(button.getAttribute('aria-controls'));
+    if(!panel)return;
+
+    button.setAttribute('aria-expanded',String(isOpen));
+    panel.setAttribute('aria-hidden',String(!isOpen));
+    panel.classList.toggle('open',isOpen);
+
+    if(isOpen){
+      panel.style.maxHeight=`${panel.scrollHeight}px`;
+    }else{
+      panel.style.maxHeight='0px';
+    }
+  };
+
+  // Every answer must be fully collapsed when the page first loads.
+  questions.forEach(button=>setState(button,false));
+
+  questions.forEach(button=>{
+    button.addEventListener('click',()=>{
+      const willOpen=button.getAttribute('aria-expanded')!=='true';
+
+      // Keep only one FAQ open at a time.
+      questions.forEach(other=>setState(other,false));
+      if(willOpen)setState(button,true);
+    });
+  });
+
+  window.addEventListener('resize',()=>{
+    questions.forEach(button=>{
+      if(button.getAttribute('aria-expanded')==='true'){
+        const panel=document.getElementById(button.getAttribute('aria-controls'));
+        if(panel)panel.style.maxHeight=`${panel.scrollHeight}px`;
+      }
+    });
+  });
+}
 function initForms(){document.querySelectorAll('.newsletter-form,.contact-form').forEach(form=>form.addEventListener('submit',e=>{e.preventDefault();const status=form.querySelector('.form-status');if(!form.checkValidity()){status.textContent='Please complete the required fields with valid information.';form.reportValidity();return;}status.textContent=form.classList.contains('contact-form')?'Demo message validated. No server submission is configured.':'Thanks! Demo signup validated locally.';form.reset();}));}
 function initDetail(){document.querySelectorAll('.small-img').forEach(img=>img.addEventListener('click',()=>{const main=document.getElementById('MainImg');if(main)main.src=img.src;}));const btn=document.getElementById('detail-add');if(btn)btn.addEventListener('click',()=>{const qty=Math.max(1,parseInt(document.getElementById('qty').value,10)||1),size=document.getElementById('size').value,status=document.querySelector('.product-info .form-status');if(!size){status.textContent='Please select a size before adding to cart.';return;}addToCart(btn.dataset.productId,qty,size);status.textContent=`Added ${qty} item(s) in ${size} to your cart.`;});}
 function renderCart(){const wrap=document.getElementById('cart-items');if(!wrap)return;let cart=getCart();if(!cart.length){wrap.innerHTML='<div class="empty-state"><h2>Your cart is empty.</h2><p>Add Pakistani eastern wear from the catalogue to see totals here.</p><a class="btn primary" href="shop.html">Continue Shopping</a></div>';}else wrap.innerHTML=cart.map((item,i)=>{const p=products.find(x=>x.id===item.id);return `<div class="cart-row"><img src="${p.image}" alt="${p.name}"><div><h3>${p.name}</h3><p>${item.size} · ${formatPKR(p.price)}</p><div class="qty-controls"><button data-dec="${i}" aria-label="Decrease quantity">−</button><span>${item.qty}</span><button data-inc="${i}" aria-label="Increase quantity">+</button><button class="remove-btn" data-remove="${i}">Remove</button></div></div><div><strong>${formatPKR(p.price*item.qty)}</strong></div></div>`}).join('');const subtotal=cart.reduce((s,i)=>s+products.find(p=>p.id===i.id).price*i.qty,0),delivery=subtotal?350:0;document.getElementById('cart-subtotal').textContent=formatPKR(subtotal);document.getElementById('cart-delivery').textContent=formatPKR(delivery);document.getElementById('cart-total').textContent=formatPKR(subtotal+delivery);wrap.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;let c=getCart();if(t.dataset.inc)c[t.dataset.inc].qty++;if(t.dataset.dec)c[t.dataset.dec].qty=Math.max(1,c[t.dataset.dec].qty-1);if(t.dataset.remove)c.splice(t.dataset.remove,1);setCart(c);renderCart();},{once:true});document.getElementById('checkout-btn')?.addEventListener('click',()=>document.querySelector('.cart-summary .form-status').textContent='Checkout is a front-end template demo. Connect a payment backend to continue.');}

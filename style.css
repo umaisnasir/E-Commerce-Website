@@ -315,3 +315,40 @@ body.nav-open {
   }
 }
 
+
+
+/* Iteration 5: definitive FAQ collapsed-state fix */
+.faq-answer {
+  display: block;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  margin: 0;
+  padding: 0;
+  transition:
+    max-height 260ms ease,
+    opacity 180ms ease,
+    visibility 0s linear 260ms;
+}
+
+.faq-answer p {
+  margin: 0;
+  padding: 0 10px;
+  overflow: hidden;
+}
+
+.faq-answer.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    max-height 260ms ease,
+    opacity 200ms ease,
+    visibility 0s linear 0s;
+}
+
+.faq-answer.open p {
+  padding-bottom: 18px;
+}
